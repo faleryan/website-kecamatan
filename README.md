@@ -38,13 +38,24 @@ GAS_URL: 'https://script.google.com/macros/s/AKfycbx.../exec',
 
 > Bila `GAS_URL` masih kosong, situs tetap tampil utuh memakai data contoh dan menampilkan pita peringatan. Panel admin dapat dijelajahi dengan **admin / admin123** dalam mode ini, tanpa penyimpanan.
 
+## Identitas visual yang dapat diunggah admin
+
+| Berkas | Diunggah di menu | Tampil di |
+|---|---|---|
+| Logo / lambang kecamatan | Akun & Identitas | Header dan footer situs publik, serta sidebar panel admin |
+| Foto camat menjabat | Akun & Identitas | Kotak "Pimpinan Kecamatan" pada halaman Profil |
+| Bagan struktur organisasi | Akun & Identitas | Halaman Profil, dapat dibuka ukuran penuh |
+| Foto hero beranda (maks. 3) | Tampilan Beranda | Bagian atas beranda |
+
+Bila sebuah berkas belum diunggah, situs menampilkan blok gradasi berlabel sebagai pengganti — tidak pernah gambar rusak.
+
 ## Halaman publik
 
 Beranda · Profil Kecamatan · Data Geografis & Peta · Data Desa · Statistik Penduduk (grafik + tabel filter) · UMKM & Potensi · Agenda Kegiatan · Galeri Foto · Pengumuman · Berita (daftar + detail) · Dokumen Publik · Formulir Pengaduan · Pencarian global.
 
 ## Modul panel admin
 
-Dashboard · Kelola Pengaduan (disposisi, status, catatan internal) · Berita · Pengumuman · Profil Kecamatan · Data Geografis · Data Desa · Statistik Penduduk · UMKM · Agenda · Galeri · Dokumen · Pengaturan Situs · Pengaturan Akun.
+Dashboard · Kelola Pengaduan (disposisi, status, catatan internal) · Berita · Pengumuman · Tampilan Beranda · UMKM · Agenda · Galeri · Dokumen · Profil Kecamatan · Data Geografis · Data Desa · Statistik Penduduk · Pengaturan Situs · Akun & Identitas.
 
 ## Catatan teknis
 
@@ -54,6 +65,16 @@ Dashboard · Kelola Pengaduan (disposisi, status, catatan internal) · Berita ·
 - Password admin disimpan sebagai hash SHA-256 bersalt, tidak pernah sebagai teks polos.
 - Tidak ada pustaka eksternal: ikon berupa SVG sebaris, grafik dibuat dengan CSS. Hanya font Google dan peta OpenStreetMap yang dimuat dari luar.
 - Responsif untuk desktop, tablet, dan ponsel; tersedia mode kontras tinggi untuk aksesibilitas.
+
+## Catatan kecepatan
+
+Jalur penyimpanan sengaja dibuat hemat panggilan agar tidak terasa lambat:
+
+- Pencarian baris hanya membaca **kolom ID**, bukan seluruh isi sheet, sehingga waktu simpan tidak ikut membengkak saat data bertambah.
+- Objek spreadsheet dipakai ulang dalam satu eksekusi (`openById` tidak dipanggil berulang).
+- Tindak lanjut pengaduan ditulis sekali jalan (`setValues` satu baris), bukan empat penulisan sel terpisah.
+- Halaman Pengaturan Situs mengirim seluruh baris dalam **satu** permintaan `saveSettings`.
+- Setelah menyimpan, panel admin memperbarui salinan data di browser memakai baris yang dikembalikan server — tidak lagi memuat ulang seluruh basis data.
 
 ## Perawatan
 

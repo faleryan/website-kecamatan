@@ -302,7 +302,43 @@ Buka alamat tersebut, lalu periksa:
 
 ### C10. Ganti password admin — **lakukan sekarang**
 
-Di panel admin: **Pengaturan Akun** → isi password lama `admin123` → isi password baru → **Perbarui Akun**.
+Di panel admin: **Akun & Identitas** → bagian *Keamanan Akun* → isi password lama `admin123` → isi password baru → **Perbarui Akun**.
+
+### C11. Unggah identitas visual kecamatan
+
+Masih di menu **Akun & Identitas**, bagian *Identitas Visual Kecamatan*:
+
+| Yang diunggah | Tampil di halaman publik |
+|---|---|
+| **Logo / lambang kecamatan** | Header dan footer semua halaman |
+| **Foto camat menjabat** | Kotak "Pimpinan Kecamatan" di halaman Profil |
+| **Bagan struktur organisasi** | Halaman Profil, bisa dibuka ukuran penuh oleh pengunjung |
+
+Klik area unggah, pilih berkas, tunggu sampai pratinjau muncul, lalu tekan **Simpan Identitas Visual**. Berkas tersimpan di folder Google Drive kantor, dan situs publik langsung memakainya.
+
+### C12. Ganti foto besar di beranda
+
+Menu **Tampilan Beranda** mengatur tiga foto besar di bagian atas beranda. Untuk setiap foto: klik **Tambah Data** (atau ikon pensil pada baris yang ada), isi **Judul** (keterangan di bawah foto), **Label Kecil** (teks kecil di atas foto), **Urutan** 1–3, setel **Tampilkan di Beranda** ke `Y`, lalu unggah berkasnya.
+
+> Foto urutan 2 tampil lebih menonjol di tengah. Gunakan foto tegak (potret), minimal 800×1000 piksel. Selama foto belum diunggah, beranda menampilkan blok gradasi berlabel — bukan gambar rusak.
+
+---
+
+## ♻️ Memperbarui Pemasangan yang Sudah Berjalan
+
+Bila Anda sudah pernah memasang versi sebelumnya, ikuti ini — **tidak perlu** menjalankan `setupAppEnvironment()` lagi dan tidak ada data yang hilang:
+
+1. **Backend:** buka proyek Apps Script → pilih semua isi `Kode.gs` → ganti dengan isi `Kode.gs` versi baru → simpan.
+2. **Deploy ulang:** Deploy → **Manage deployments** → klik ikon pensil ✏️ → **Version: New version** → **Deploy**. URL `/exec` tidak berubah.
+3. **Frontend:** timpa berkas lama dengan isi ZIP yang baru, isi kembali `GAS_URL` di `js/config.js`, lalu:
+
+```bash
+git add .
+git commit -m "Perbarui ke versi terbaru"
+git push
+```
+
+Sheet baru `Tampilan_Beranda` dibuat otomatis saat pertama kali diakses, dan baris pengaturan baru (`logo_kecamatan`, `foto_camat`, `struktur_organisasi`) ditambahkan sendiri saat Anda menekan Simpan di menu Akun & Identitas.
 
 ---
 
@@ -331,6 +367,9 @@ GitHub Pages membangun ulang dalam 1–2 menit. Bila halaman masih versi lama, t
 | Pita kuning **"mode contoh"** masih muncul | `GAS_URL` di `js/config.js` masih kosong atau salah | Perbaiki berkas itu, lalu `git add . && git commit -m "isi GAS_URL" && git push` |
 | Data tidak muncul, konsol berisi galat CORS | Deployment Apps Script belum "Anyone" | Apps Script → Deploy → Manage deployments → Edit → Who has access: **Anyone** |
 | Perubahan konten admin tidak tampil di situs publik | Cache backend (5 menit) | Tunggu sebentar lalu muat ulang, atau klik tombol muat ulang di panel admin |
+| Menyimpan data terasa lambat | Versi backend lama masih terpasang | Perbarui `Kode.gs` dan **deploy ulang** (lihat bagian "Memperbarui Pemasangan yang Sudah Berjalan") |
+| Logo/foto yang diunggah tidak muncul | Belum menekan tombol Simpan setelah mengunggah | Di menu Akun & Identitas, tekan **Simpan Identitas Visual** setelah pratinjau muncul |
+| Unggahan ditolak "mode contoh" | `GAS_URL` masih kosong | Unggahan berkas hanya aktif bila backend terhubung — isi `GAS_URL` lebih dulu |
 | `fatal: not a git repository` | `git init` belum dijalankan / folder salah | Jalankan `dir` dulu, pastikan `index.html` terlihat, baru `git init` |
 | `remote origin already exists` | Sudah pernah disambungkan | Lewati, langsung `git push` |
 | `src refspec main does not match any` | Belum ada commit | Jalankan `git add .` lalu `git commit -m "Upload pertama"` |
@@ -382,6 +421,7 @@ Setup otomatis membuat sheet berikut di dalam satu spreadsheet:
 | `Pengaduan` | Laporan warga + tindak lanjut internal |
 | `Admin_Users` | Akun admin (password ter-hash SHA-256 bersalt) |
 | `Upload_Dokumen` | Dokumen publik & internal |
+| `Tampilan_Beranda` | Foto besar (hero) pada beranda publik |
 | `Pengaturan_Situs` | Identitas situs (nama, alamat, kontak, koordinat peta) |
 
 Anda boleh menyunting isi sel langsung di spreadsheet bila perlu, **tetapi jangan mengubah nama sheet maupun judul kolom pada baris pertama** — keduanya dipakai oleh program.

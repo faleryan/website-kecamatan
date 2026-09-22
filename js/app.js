@@ -85,6 +85,16 @@ const SHELL = {
   render() {
     const set = DATA.Pengaturan_Situs || APP_CONFIG.SITUS;
 
+    // Lambang kecamatan: pakai logo unggahan admin bila tersedia,
+    // jika belum ada tampilkan ikon gedung bawaan.
+    const lambang = function (ukuran) {
+      if (set.logo_kecamatan) {
+        return '<span class="brand-mark brand-logo"><img src="' + UI.esc(set.logo_kecamatan) +
+               '" alt="Lambang ' + UI.esc(set.nama_kecamatan || 'kecamatan') + '"></span>';
+      }
+      return '<span class="brand-mark">' + ICON.gedung.replace('18', ukuran || '22') + '</span>';
+    };
+
     /* ---- Topbar ---- */
     document.getElementById('topbar').innerHTML = '<div class="wrap">' +
       '<div class="topbar-left">' +
@@ -99,8 +109,7 @@ const SHELL = {
 
     /* ---- Header ---- */
     document.getElementById('header').innerHTML = '<div class="wrap">' +
-      '<a class="brand" href="#/beranda">' +
-        '<span class="brand-mark">' + ICON.gedung.replace('18','22') + '</span>' +
+      '<a class="brand" href="#/beranda">' + lambang('22') +
         '<span class="brand-text"><strong>' + UI.esc(set.nama_kecamatan || '') + '</strong>' +
         '<span>' + UI.esc(set.nama_kabupaten || '') + '</span></span>' +
       '</a>' +
@@ -133,7 +142,7 @@ const SHELL = {
     document.getElementById('footer').innerHTML = '<div class="wrap">' +
       '<div class="footer-grid">' +
         '<div>' +
-          '<div class="footer-brand"><span class="brand-mark">' + ICON.gedung.replace('18','20') + '</span>' +
+          '<div class="footer-brand">' + lambang('20') +
           '<strong>' + UI.esc(set.nama_kecamatan || '') + '</strong></div>' +
           '<p>Pemerintah ' + UI.esc(set.nama_kabupaten || '') + '. Melayani masyarakat dengan transparan, akuntabel, dan berkeadilan.</p>' +
           '<ul class="footer-contact" style="margin-top:1rem">' +

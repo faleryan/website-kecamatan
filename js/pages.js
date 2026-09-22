@@ -98,14 +98,24 @@ PAGES.beranda = function () {
   });
   const set = DATA.Pengaturan_Situs || {};
 
-  /* --- Hero --- */
-  const kartuHero = [
-    { tag: 'Pusat Pemerintahan', cap: 'Kantor Kecamatan' },
-    { tag: 'Wisata & Alam',      cap: 'Potensi Desa Binaan' },
-    { tag: 'Inovasi Layanan',    cap: 'Pelayanan Terpadu' }
-  ].map(function (k) {
-    return '<div class="hero-card"><span class="tag">' + UI.esc(k.tag) + '</span>' +
-           UI.placeholder(k.cap) + '<span class="cap">' + UI.esc(k.cap) + '</span></div>';
+  /* --- Hero: foto diatur admin lewat menu "Tampilan Beranda" --- */
+  const bawaanHero = [
+    { Label: 'Pusat Pemerintahan', Judul: 'Kantor Kecamatan',    Gambar: '' },
+    { Label: 'Wisata & Alam',      Judul: 'Potensi Desa Binaan', Gambar: '' },
+    { Label: 'Inovasi Layanan',    Judul: 'Pelayanan Terpadu',   Gambar: '' }
+  ];
+  const dataHero = (DATA.Tampilan_Beranda && DATA.Tampilan_Beranda.length)
+    ? DATA.Tampilan_Beranda.slice()
+        .filter(function (k) { return String(k.Aktif || 'Y').toUpperCase() !== 'N'; })
+        .sort(function (a, b) { return (Number(a.Urutan) || 0) - (Number(b.Urutan) || 0); })
+        .slice(0, 3)
+    : bawaanHero;
+
+  const kartuHero = (dataHero.length ? dataHero : bawaanHero).map(function (k) {
+    return '<div class="hero-card">' +
+      (k.Label ? '<span class="tag">' + UI.esc(k.Label) + '</span>' : '') +
+      UI.gambar(k.Gambar, k.Judul) +
+      '<span class="cap">' + UI.esc(k.Judul) + '</span></div>';
   }).join('');
 
   let html = '<section class="hero"><div class="wrap">' +
@@ -361,12 +371,27 @@ PAGES.profil = function () {
       return '<div class="profil-block"><span class="eyebrow dark">Bagian ' + UI.esc(b.Urutan_Tampil || '') + '</span>' +
         '<h3>' + UI.esc(b.Judul_Bagian) + '</h3>' +
         '<div class="isi">' + UI.paragraf(b.Isi_Konten) + '</div></div>';
-    }).join('') : UI.kosong('Profil belum diisi', 'Admin belum menambahkan konten profil kecamatan.')) + '</div>' +
+    }).join('') : UI.kosong('Profil belum diisi', 'Admin belum menambahkan konten profil kecamatan.')) +
+
+    // Bagan struktur organisasi — diunggah admin lewat panel
+    (set.struktur_organisasi
+      ? '<div class="card" style="margin-top:1rem">' +
+          '<div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border)">' +
+            '<span class="eyebrow dark">Bagan Resmi</span>' +
+            '<h3 style="font-size:19px;margin:.2rem 0 0">Struktur Organisasi Kecamatan</h3></div>' +
+          '<a href="' + UI.esc(set.struktur_organisasi) + '" target="_blank" rel="noopener" ' +
+            'style="display:block;padding:1.25rem;background:var(--subtle)">' +
+            '<img src="' + UI.esc(set.struktur_organisasi) + '" alt="Bagan struktur organisasi kecamatan" ' +
+            'loading="lazy" style="width:100%;height:auto;border-radius:var(--r);background:#fff">' +
+          '</a>' +
+          '<p style="padding:.75rem 1.25rem;margin:0;font-size:12.5px;color:var(--text-muted)">Klik bagan untuk membukanya dalam ukuran penuh.</p>' +
+        '</div>'
+      : '') + '</div>' +
 
     '<aside style="display:grid;gap:1rem">' +
       '<div class="aside-card"><h4>' + ICON.orang + ' Pimpinan Kecamatan</h4><div class="body">' +
         '<div style="aspect-ratio:1;border-radius:var(--r-lg);overflow:hidden;margin-bottom:.85rem">' +
-          UI.placeholder(set.nama_camat || APP_CONFIG.SITUS.nama_camat) + '</div>' +
+          UI.gambar(set.foto_camat, set.nama_camat || APP_CONFIG.SITUS.nama_camat) + '</div>' +
         '<strong style="display:block;font-size:15px">' + UI.esc(set.nama_camat || APP_CONFIG.SITUS.nama_camat) + '</strong>' +
         '<span style="font-size:13px;color:var(--text-muted)">Camat ' + UI.esc(set.nama_kecamatan || APP_CONFIG.SITUS.nama_kecamatan) + '</span>' +
       '</div></div>' +

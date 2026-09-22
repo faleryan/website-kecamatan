@@ -25,8 +25,19 @@ const DEMO_DATA = {
     jam_layanan: 'Senin–Jumat, 08.00 – 15.30 WITA',
     koordinat_peta: '-7.9666,112.6326',
     nama_camat: 'Drs. Hendra Santoso, M.Si.',
-    footer_catatan: 'Terintegrasi dengan Sistem Informasi Kabupaten.'
+    footer_catatan: 'Terintegrasi dengan Sistem Informasi Kabupaten.',
+    logo_kecamatan: '',
+    foto_camat: '',
+    struktur_organisasi: ''
   },
+
+  // Foto besar pada hero beranda — seluruhnya dikelola admin
+  // lewat menu "Tampilan Beranda" di panel administrasi.
+  Tampilan_Beranda: [
+    { ID:'TAM-001', Judul:'Kantor Kecamatan',     Label:'Pusat Pemerintahan', Gambar:'', Urutan:1, Aktif:'Y' },
+    { ID:'TAM-002', Judul:'Potensi Desa Binaan',  Label:'Wisata & Alam',      Gambar:'', Urutan:2, Aktif:'Y' },
+    { ID:'TAM-003', Judul:'Pelayanan Terpadu',    Label:'Inovasi Layanan',    Gambar:'', Urutan:3, Aktif:'Y' }
+  ],
 
   Profil_Kecamatan: [
     { ID: 'PRO-001', Judul_Bagian: 'Sejarah', Urutan_Tampil: 1, Isi_Konten:

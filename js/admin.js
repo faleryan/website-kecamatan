@@ -225,8 +225,29 @@ const MODUL = {
     ]
   },
 
+  tampilan: {
+    label: 'Tampilan Beranda', ikon: 'galeri', grup: 'Konten Publik', sheet: 'Tampilan_Beranda',
+    judul: 'Kelola Tampilan Beranda',
+    deskripsi: 'Foto besar pada bagian atas (hero) beranda website publik. Tiga foto berurutan teratas dengan status Aktif "Y" yang akan ditampilkan.',
+    kolom: [
+      { k: 'Gambar', l: '', t: 'gambar' },
+      { k: 'Judul', l: 'Judul Foto', t: 'utama' },
+      { k: 'Label', l: 'Label Kecil', t: 'lencana' },
+      { k: 'Urutan', l: 'Urutan', t: 'angka' },
+      { k: 'Aktif', l: 'Tampil', t: 'yn' }
+    ],
+    field: [
+      { k: 'Judul', l: 'Judul Foto', t: 'text', wajib: true, bantuan: 'Tampil sebagai keterangan di bawah foto. Contoh: Kantor Kecamatan.' },
+      { k: 'Label', l: 'Label Kecil di Atas Foto', t: 'text', bantuan: 'Contoh: Pusat Pemerintahan, Wisata & Alam, Inovasi Layanan.' },
+      { k: 'Urutan', l: 'Urutan Tampil (1–3)', t: 'angka', bantuan: 'Foto urutan 2 tampil lebih menonjol di tengah.' },
+      { k: 'Aktif', l: 'Tampilkan di Beranda', t: 'pilih', opsi: ['Y', 'N'], wajib: true },
+      { k: 'Gambar', l: 'Berkas Foto', t: 'berkas', kategori: 'galeri', penuh: true, wajib: true,
+        bantuan: 'Disarankan foto tegak (potret), minimal 800×1000 piksel.' }
+    ]
+  },
+
   pengaturan: { label: 'Pengaturan Situs', ikon: 'gedung', grup: 'Konfigurasi', sheet: 'Pengaturan_Situs' },
-  akun:       { label: 'Pengaturan Akun', ikon: 'orang',  grup: 'Konfigurasi' }
+  akun:       { label: 'Akun & Identitas', ikon: 'orang',  grup: 'Konfigurasi' }
 };
 
 const STATUS_ADUAN = ['Menunggu Verifikasi', 'Sedang Diproses', 'Tindak Lanjut Lapangan', 'Selesai / Ditutup', 'Ditolak'];
@@ -371,6 +392,7 @@ async function muatData() {
         return { key: k, value: DEMO_DATA.Pengaturan_Situs[k], keterangan: '' };
       });
       ADMIN.data.Pengaduan = ADMIN.data.Pengaduan || contohPengaduan();
+      ADMIN.data.Tampilan_Beranda = ADMIN.data.Tampilan_Beranda || [];
     } else {
       const hasil = await API.post('listAll', {}, ADMIN.token);
       if (!hasil.success) throw new Error(hasil.message || 'Gagal memuat data.');
@@ -432,8 +454,14 @@ function gambarSidebar() {
     return String(p.Status_Tindak_Lanjut || '').toLowerCase().indexOf('menunggu') > -1;
   }).length;
 
-  let html = '<div class="side-brand"><span class="brand-mark">' + ICON.gedung.replace('18','20') + '</span>' +
-    '<span><strong>Kecamatan Digital</strong><span>Panel Administrasi</span></span></div>';
+  const logo = pengaturanNilai('logo_kecamatan');
+  const lambang = logo
+    ? '<span class="brand-mark brand-logo"><img src="' + UI.esc(logo) + '" alt="Lambang kecamatan"></span>'
+    : '<span class="brand-mark">' + ICON.gedung.replace('18','20') + '</span>';
+
+  let html = '<div class="side-brand">' + lambang +
+    '<span><strong>' + UI.esc(pengaturanNilai('nama_kecamatan') || 'Kecamatan Digital') + '</strong>' +
+    '<span>Panel Administrasi</span></span></div>';
 
   Object.keys(grup).forEach(function (g) {
     html += '<div class="side-group">' + UI.esc(g) + '</div><nav class="side-nav">' +
@@ -491,6 +519,36 @@ function gambarTopbar() {
     const el = document.getElementById('filterCari');
     if (el) { el.value = e.target.value; el.dispatchEvent(new Event('input')); }
   });
+}
+
+/** Ambil satu nilai dari sheet Pengaturan_Situs (bentuknya baris key/value). */
+function pengaturanNilai(kunci) {
+  const baris = (ADMIN.data.Pengaturan_Situs || []).filter(function (r) { return r.key === kunci; })[0];
+  return baris ? String(baris.value || '') : '';
+}
+
+/** Perbarui beberapa pengaturan sekaligus — satu permintaan ke server. */
+async function simpanPengaturan(objek) {
+  if (ADMIN.demo) {
+    const arr = ADMIN.data.Pengaturan_Situs = ADMIN.data.Pengaturan_Situs || [];
+    Object.keys(objek).forEach(function (k) {
+      const b = arr.filter(function (r) { return r.key === k; })[0];
+      if (b) b.value = objek[k];
+      else arr.push({ key: k, value: objek[k], keterangan: '' });
+    });
+    return { success: true, demo: true };
+  }
+  const hasil = await API.post('saveSettings', { pengaturan: objek }, ADMIN.token);
+  if (!hasil.success) throw new Error(hasil.message);
+
+  // Perbarui salinan lokal tanpa memuat ulang seluruh basis data
+  const arr = ADMIN.data.Pengaturan_Situs = ADMIN.data.Pengaturan_Situs || [];
+  Object.keys(objek).forEach(function (k) {
+    const b = arr.filter(function (r) { return r.key === k; })[0];
+    if (b) b.value = objek[k];
+    else arr.push({ key: k, value: objek[k], keterangan: '' });
+  });
+  return hasil;
 }
 
 /* ==========================================================================
@@ -697,7 +755,98 @@ function selKolom(r, k) {
 }
 
 /* ==========================================================================
-   8. MODAL FORMULIR
+   8. PENGUNGGAH BERKAS (dipakai bersama modal & halaman Akun)
+   ========================================================================== */
+
+/** Markup satu area unggah + pratinjau. */
+function htmlUploader(kunci, label, kategori, nilai, catatan) {
+  const terima = (kategori === 'dokumen') ? 'application/pdf,image/*' : 'image/*';
+  return '<input type="hidden" id="f_' + kunci + '" value="' + UI.esc(nilai || '') + '">' +
+    '<div class="dropzone" data-unggah="' + kunci + '" data-kategori="' + kategori + '" tabindex="0" role="button">' +
+      '<div class="dz-icon">' + ICON.unggah.replace('18','26') + '</div>' +
+      '<p><strong>Klik untuk memilih berkas</strong> atau seret ke area ini</p>' +
+      '<small>' + UI.esc(catatan || 'Tersimpan otomatis ke folder Google Drive kantor kecamatan') + '</small>' +
+    '</div>' +
+    '<input type="file" id="file_' + kunci + '" hidden accept="' + terima + '">' +
+    '<div id="pratinjau_' + kunci + '" style="margin-top:.6rem">' + htmlPratinjau(kunci, nilai, label) + '</div>';
+}
+
+function htmlPratinjau(kunci, url, label, nama, ukuran) {
+  if (!url) return '';
+  return '<div class="file-item"><div class="fi-thumb">' + UI.gambar(url, label || 'Berkas') + '</div>' +
+    '<div class="fi-meta"><strong>' + UI.esc(nama || 'Berkas tersimpan') + '</strong>' +
+    '<span style="word-break:break-all">' + UI.esc(ukuran ? ukuran + ' · tersimpan di Drive' : UI.potong(url, 60)) + '</span></div>' +
+    '<button type="button" data-kosongkan="' + kunci + '" title="Hapus berkas">' + ICON.hapus.replace('18','16') + '</button></div>';
+}
+
+/**
+ * Menghidupkan semua area unggah di dalam sebuah wadah.
+ * Berkas dikirim ke Apps Script (base64) lalu disimpan ke Google Drive;
+ * URL hasilnya diisikan ke input tersembunyi berpasangan.
+ */
+function pasangUploader(wadah) {
+  wadah.querySelectorAll('[data-unggah]').forEach(function (dz) {
+    if (dz.dataset.siap === '1') return;
+    dz.dataset.siap = '1';
+
+    const kunci = dz.dataset.unggah;
+    const inp = document.getElementById('file_' + kunci);
+
+    const proses = async function (file) {
+      if (!file) return;
+      if (ADMIN.demo) {
+        UI.notif('Mode contoh: unggahan berkas dinonaktifkan. Isi GAS_URL untuk mengaktifkannya.', 'error');
+        return;
+      }
+      const maks = 10 * 1024 * 1024;
+      if (file.size > maks) { UI.notif('Ukuran berkas melebihi 10 MB.', 'error'); return; }
+
+      dz.classList.add('sibuk');
+      UI.muat(true);
+      try {
+        const berkas = await API.bacaBerkas(file);
+        const hasil = await API.post('uploadFile', {
+          kategori: dz.dataset.kategori, namaFile: berkas.namaFile,
+          mimeType: berkas.mimeType, base64: berkas.base64
+        }, ADMIN.token);
+        if (!hasil.success) throw new Error(hasil.message);
+
+        document.getElementById('f_' + kunci).value = hasil.url;
+        const ukuranEl = document.getElementById('f_Ukuran');
+        if (ukuranEl && !ukuranEl.value) ukuranEl.value = UI.ukuranBerkas(hasil.ukuran);
+        document.getElementById('pratinjau_' + kunci).innerHTML =
+          htmlPratinjau(kunci, hasil.url, hasil.nama, hasil.nama, UI.ukuranBerkas(hasil.ukuran));
+        dz.dispatchEvent(new CustomEvent('terunggah', { bubbles: true, detail: hasil }));
+        UI.notif('Berkas berhasil diunggah ke Google Drive.', 'success');
+      } catch (err) {
+        UI.notif('Gagal mengunggah: ' + err.message, 'error');
+      }
+      dz.classList.remove('sibuk');
+      UI.muat(false);
+    };
+
+    dz.addEventListener('click', function () { inp.click(); });
+    dz.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } });
+    ['dragover', 'dragenter'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('drag'); }); });
+    ['dragleave', 'drop'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('drag'); }); });
+    dz.addEventListener('drop', function (e) { proses(e.dataTransfer.files[0]); });
+    inp.addEventListener('change', function () { proses(inp.files[0]); inp.value = ''; });
+  });
+
+  if (wadah.dataset.siapKosong === '1') return;
+  wadah.dataset.siapKosong = '1';
+  wadah.addEventListener('click', function (e) {
+    const b = e.target.closest('[data-kosongkan]');
+    if (!b) return;
+    const k = b.dataset.kosongkan;
+    document.getElementById('f_' + k).value = '';
+    document.getElementById('pratinjau_' + k).innerHTML = '';
+    wadah.dispatchEvent(new CustomEvent('dikosongkan', { bubbles: true, detail: { kunci: k } }));
+  });
+}
+
+/* ==========================================================================
+   8B. MODAL FORMULIR
    ========================================================================== */
 function bukaForm(idModul, record) {
   const m = MODUL[idModul];
@@ -726,19 +875,7 @@ function bukaForm(idModul, record) {
           }).join('') + '</select>';
         break;
       case 'berkas':
-        kendali =
-          '<input type="hidden" id="f_' + f.k + '" value="' + UI.esc(nilai) + '">' +
-          '<div class="dropzone" data-unggah="' + f.k + '" data-kategori="' + (f.kategori || 'umum') + '" tabindex="0" role="button">' +
-            '<div class="dz-icon">' + ICON.unggah.replace('18','26') + '</div>' +
-            '<p><strong>Klik untuk memilih berkas</strong> atau seret ke area ini</p>' +
-            '<small>Tersimpan otomatis ke folder Google Drive kantor kecamatan</small>' +
-          '</div>' +
-          '<input type="file" id="file_' + f.k + '" hidden ' + (f.kategori === 'dokumen' ? 'accept="application/pdf,image/*"' : 'accept="image/*"') + '>' +
-          '<div id="pratinjau_' + f.k + '" style="margin-top:.6rem">' +
-            (nilai ? '<div class="file-item"><div class="fi-thumb">' + UI.gambar(nilai, f.l) + '</div>' +
-              '<div class="fi-meta"><strong>Berkas tersimpan</strong><span style="word-break:break-all">' + UI.esc(UI.potong(nilai, 60)) + '</span></div>' +
-              '<button type="button" data-kosongkan="' + f.k + '">' + ICON.hapus.replace('18','16') + '</button></div>' : '') +
-          '</div>';
+        kendali = htmlUploader(f.k, f.l, f.kategori || 'umum', nilai);
         break;
       default:
         kendali = '<input id="f_' + f.k + '" type="text" value="' + UI.esc(nilai) + '"' + (f.wajib ? ' required' : '') + '>';
@@ -770,51 +907,8 @@ function bukaForm(idModul, record) {
   document.getElementById('batalModal').addEventListener('click', tutup);
   bg.addEventListener('click', function (e) { if (e.target === bg) tutup(); });
 
-  /* ---- Unggah berkas ---- */
-  bg.querySelectorAll('[data-unggah]').forEach(function (dz) {
-    const kunci = dz.dataset.unggah;
-    const inp = document.getElementById('file_' + kunci);
-    const proses = async function (file) {
-      if (!file) return;
-      if (ADMIN.demo) {
-        UI.notif('Mode contoh: unggahan berkas dinonaktifkan.', 'error');
-        return;
-      }
-      UI.muat(true);
-      try {
-        const berkas = await API.bacaBerkas(file);
-        const hasil = await API.post('uploadFile', {
-          kategori: dz.dataset.kategori, namaFile: berkas.namaFile,
-          mimeType: berkas.mimeType, base64: berkas.base64
-        }, ADMIN.token);
-        if (!hasil.success) throw new Error(hasil.message);
-        document.getElementById('f_' + kunci).value = hasil.url;
-        const ukuranEl = document.getElementById('f_Ukuran');
-        if (ukuranEl && !ukuranEl.value) ukuranEl.value = UI.ukuranBerkas(hasil.ukuran);
-        document.getElementById('pratinjau_' + kunci).innerHTML =
-          '<div class="file-item"><div class="fi-thumb">' + UI.gambar(hasil.url, hasil.nama) + '</div>' +
-          '<div class="fi-meta"><strong>' + UI.esc(hasil.nama) + '</strong><span>' + UI.ukuranBerkas(hasil.ukuran) + ' · tersimpan di Drive</span></div>' +
-          '<button type="button" data-kosongkan="' + kunci + '">' + ICON.hapus.replace('18','16') + '</button></div>';
-        UI.notif('Berkas berhasil diunggah ke Google Drive.', 'success');
-      } catch (err) {
-        UI.notif('Gagal mengunggah: ' + err.message, 'error');
-      }
-      UI.muat(false);
-    };
-    dz.addEventListener('click', function () { inp.click(); });
-    dz.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } });
-    ['dragover', 'dragenter'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('drag'); }); });
-    ['dragleave', 'drop'].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('drag'); }); });
-    dz.addEventListener('drop', function (e) { proses(e.dataTransfer.files[0]); });
-    inp.addEventListener('change', function () { proses(inp.files[0]); inp.value = ''; });
-  });
-
-  bg.addEventListener('click', function (e) {
-    const b = e.target.closest('[data-kosongkan]');
-    if (!b) return;
-    document.getElementById('f_' + b.dataset.kosongkan).value = '';
-    document.getElementById('pratinjau_' + b.dataset.kosongkan).innerHTML = '';
-  });
+  /* ---- Unggah berkas (lihat pasangUploader di bagian utilitas) ---- */
+  pasangUploader(bg);
 
   /* ---- Simpan ---- */
   document.getElementById('formModal').addEventListener('submit', async function (e) {
@@ -872,7 +966,14 @@ async function simpanData(idModul, rec, baru) {
 
   const hasil = await API.post('saveRecord', { sheet: m.sheet, record: rec }, ADMIN.token);
   if (!hasil.success) throw new Error(hasil.message);
-  await muatData();
+
+  // OPTIMASI: server mengembalikan baris hasil simpan, jadi salinan lokal cukup
+  // diperbarui di tempat. Sebelumnya seluruh sheet dimuat ulang setiap kali
+  // menyimpan — itulah penyebab utama simpan terasa lambat.
+  const arr = ADMIN.data[m.sheet] = ADMIN.data[m.sheet] || [];
+  const tersimpan = hasil.record || Object.assign({}, rec, { ID: hasil.id });
+  const i = arr.findIndex(function (x) { return String(x.ID) === String(tersimpan.ID); });
+  if (i > -1) arr[i] = tersimpan; else arr.unshift(tersimpan);
 }
 
 async function hapusData(idModul, id) {
@@ -886,7 +987,7 @@ async function hapusData(idModul, id) {
     } else {
       const hasil = await API.post('deleteRecord', { sheet: m.sheet, id: id }, ADMIN.token);
       if (!hasil.success) throw new Error(hasil.message);
-      await muatData();
+      ADMIN.data[m.sheet] = (ADMIN.data[m.sheet] || []).filter(function (x) { return String(x.ID) !== String(id); });
     }
     gambarSidebar();
     bukaModul(idModul);
@@ -1079,8 +1180,8 @@ function gambarDetailAduan() {
       } else {
         const hasil = await API.post('updatePengaduan', muatan, ADMIN.token);
         if (!hasil.success) throw new Error(hasil.message);
-        await muatData();
-        ADMIN.aduanTerpilih = (ADMIN.data.Pengaduan || []).filter(function (x) { return String(x.ID) === String(a.ID); })[0] || null;
+        // Cukup perbarui tiket yang bersangkutan — tidak perlu memuat ulang semuanya
+        Object.assign(a, muatan, { Updated_At: new Date().toISOString() });
         UI.notif('Tindak lanjut pengaduan tersimpan.', 'success');
       }
       gambarSidebar();
@@ -1108,7 +1209,7 @@ async function hapusAduan(id) {
     } else {
       const hasil = await API.post('deletePengaduan', { id: id }, ADMIN.token);
       if (!hasil.success) throw new Error(hasil.message);
-      await muatData();
+      ADMIN.data.Pengaduan = (ADMIN.data.Pengaduan || []).filter(function (x) { return String(x.ID) !== String(id); });
     }
     if (ADMIN.aduanTerpilih && String(ADMIN.aduanTerpilih.ID) === String(id)) ADMIN.aduanTerpilih = null;
     gambarSidebar();
@@ -1123,46 +1224,74 @@ async function hapusAduan(id) {
 /* ==========================================================================
    10. PENGATURAN SITUS
    ========================================================================== */
+
+// Kunci yang selalu ditampilkan, walau belum ada barisnya di spreadsheet.
+const KUNCI_PENGATURAN = [
+  ['nama_kecamatan', 'Nama kecamatan pada header & footer'],
+  ['nama_kabupaten', 'Nama kabupaten'],
+  ['tagline',        'Tagline pada hero beranda'],
+  ['alamat',         'Alamat kantor'],
+  ['telepon',        'Telepon kantor'],
+  ['email',          'Surel resmi'],
+  ['whatsapp',       'Nomor WhatsApp layanan (format 62…)'],
+  ['jam_layanan',    'Jam pelayanan'],
+  ['koordinat_peta', 'Koordinat kantor (lat,lng) untuk peta'],
+  ['nama_camat',     'Nama camat menjabat'],
+  ['footer_catatan', 'Catatan kecil di footer']
+];
+
+// Kunci media dikelola di halaman Akun & Identitas, bukan di sini.
+const KUNCI_MEDIA = ['logo_kecamatan', 'foto_camat', 'struktur_organisasi'];
+
 function gambarPengaturan() {
   const baris = ADMIN.data.Pengaturan_Situs || [];
+  const peta = {};
+  baris.forEach(function (r) { peta[r.key] = r; });
+
+  // Gabungkan kunci bawaan dengan kunci tambahan yang sudah ada di sheet
+  const daftar = KUNCI_PENGATURAN.slice();
+  baris.forEach(function (r) {
+    if (KUNCI_MEDIA.indexOf(r.key) > -1) return;
+    if (!daftar.some(function (x) { return x[0] === r.key; })) daftar.push([r.key, r.keterangan || '']);
+  });
 
   document.getElementById('adminBody').innerHTML =
     '<div class="modul-head"><div><h1>Pengaturan Situs</h1>' +
-      '<p>Identitas kecamatan yang tampil pada header, footer, halaman kontak, dan peta situs publik.</p></div></div>' +
+      '<p>Identitas kecamatan yang tampil pada header, footer, halaman kontak, dan peta situs publik. ' +
+      'Logo, foto camat, dan bagan struktur organisasi diatur di menu <strong>Akun &amp; Identitas</strong>.</p></div>' +
+      '<div class="modul-actions"><button class="btn btn-outline btn-sm" data-lompat="akun">' +
+        ICON.galeri.replace('18','15') + ' Identitas Visual</button></div></div>' +
     '<div class="card card-pad"><form id="formSetting">' +
-      (baris.length ? baris.map(function (r) {
+      daftar.map(function (d) {
+        const r = peta[d[0]] || { key: d[0], value: '', keterangan: d[1] };
         return '<div class="setting-row"><div class="ket"><strong>' + UI.esc(r.key) + '</strong>' +
-          '<span>' + UI.esc(r.keterangan || '') + '</span></div>' +
+          '<span>' + UI.esc(r.keterangan || d[1] || '') + '</span></div>' +
           '<div class="field"><input data-key="' + UI.esc(r.key) + '" type="text" value="' + UI.esc(r.value) + '"></div></div>';
-      }).join('') : UI.kosong('Pengaturan belum tersedia', 'Sheet Pengaturan_Situs masih kosong.')) +
-      (baris.length ? '<div style="display:flex;justify-content:flex-end;margin-top:1.25rem">' +
-        '<button class="btn btn-primary" type="submit" id="btnSimpanSetting">' + ICON.simpan.replace('18','16') + ' Simpan Semua Pengaturan</button></div>' : '') +
+      }).join('') +
+      '<div style="display:flex;justify-content:flex-end;margin-top:1.25rem">' +
+        '<button class="btn btn-primary" type="submit" id="btnSimpanSetting">' + ICON.simpan.replace('18','16') + ' Simpan Semua Pengaturan</button></div>' +
     '</form></div>';
 
-  const form = document.getElementById('formSetting');
-  if (!baris.length) return;
+  document.getElementById('adminBody').addEventListener('click', function (e) {
+    const b = e.target.closest('[data-lompat]');
+    if (b) bukaModul(b.dataset.lompat);
+  });
 
-  form.addEventListener('submit', async function (e) {
+  document.getElementById('formSetting').addEventListener('submit', async function (e) {
     e.preventDefault();
     const btn = document.getElementById('btnSimpanSetting');
     btn.disabled = true; btn.textContent = 'Menyimpan…';
     try {
-      const input = form.querySelectorAll('[data-key]');
-      for (let i = 0; i < input.length; i++) {
-        const k = input[i].dataset.key, v = input[i].value;
-        if (ADMIN.demo) {
-          const r = baris.filter(function (x) { return x.key === k; })[0];
-          if (r) r.value = v;
-        } else {
-          const hasil = await API.post('saveRecord', {
-            sheet: 'Pengaturan_Situs', record: { key: k, value: v }
-          }, ADMIN.token);
-          if (!hasil.success) throw new Error(hasil.message);
-        }
-      }
-      if (!ADMIN.demo) await muatData();
-      UI.notif(ADMIN.demo ? 'Mode contoh: perubahan tidak tersimpan permanen.' : 'Pengaturan situs berhasil disimpan.',
-               ADMIN.demo ? 'info' : 'success');
+      // Seluruh baris dikirim dalam SATU permintaan (sebelumnya satu permintaan
+      // per baris — itulah yang membuat penyimpanan terasa sangat lambat).
+      const objek = {};
+      document.querySelectorAll('#formSetting [data-key]').forEach(function (i) {
+        objek[i.dataset.key] = i.value;
+      });
+      const hasil = await simpanPengaturan(objek);
+      gambarSidebar();
+      UI.notif(hasil.demo ? 'Mode contoh: perubahan tidak tersimpan permanen.' : 'Pengaturan situs berhasil disimpan.',
+               hasil.demo ? 'info' : 'success');
     } catch (err) {
       UI.notif('Gagal menyimpan: ' + err.message, 'error');
     }
@@ -1172,13 +1301,41 @@ function gambarPengaturan() {
 }
 
 /* ==========================================================================
-   11. PENGATURAN AKUN
+   11. AKUN & IDENTITAS VISUAL
    ========================================================================== */
 function gambarAkun() {
   const u = ADMIN.user || {};
+
+  const media = [
+    { k: 'logo_kecamatan', l: 'Logo / Lambang Kecamatan',
+      ket: 'Tampil di header dan footer website publik serta pada panel admin. Gunakan PNG berlatar transparan, rasio 1:1, minimal 256×256 piksel.' },
+    { k: 'foto_camat', l: 'Foto Camat Menjabat',
+      ket: 'Tampil pada kotak "Pimpinan Kecamatan" di halaman Profil Kecamatan. Gunakan pas foto rasio 1:1.' },
+    { k: 'struktur_organisasi', l: 'Bagan Struktur Organisasi',
+      ket: 'Tampil sebagai gambar penuh di halaman Profil Kecamatan dan dapat dibuka pengunjung dalam ukuran besar. Unggah gambar bagan (JPG/PNG) atau berkas PDF.' }
+  ];
+
   document.getElementById('adminBody').innerHTML =
-    '<div class="modul-head"><div><h1>Pengaturan Akun</h1>' +
-      '<p>Perbarui identitas dan kata sandi akun administrator. Password disimpan dalam bentuk hash SHA-256 bersalt.</p></div></div>' +
+    '<div class="modul-head"><div><h1>Akun &amp; Identitas</h1>' +
+      '<p>Perbarui kata sandi akun administrator, serta unggah logo kecamatan, foto camat, dan bagan struktur organisasi yang dipakai website publik.</p></div></div>' +
+
+    '<h3 style="font-size:17px;margin:0 0 .25rem">Identitas Visual Kecamatan</h3>' +
+    '<p style="font-size:13.5px;color:var(--text-soft);margin:0 0 1rem">Berkas tersimpan di Google Drive kantor. Perubahan langsung tampil di website publik setelah disimpan.</p>' +
+
+    '<div id="mediaWadah" class="grid grid-3" style="margin-bottom:1rem">' +
+      media.map(function (m) {
+        return '<div class="card card-pad">' +
+          '<h4 style="font-size:14.5px;margin-bottom:.2rem">' + UI.esc(m.l) + '</h4>' +
+          '<p style="font-size:12.5px;color:var(--text-muted);margin-bottom:.75rem">' + UI.esc(m.ket) + '</p>' +
+          htmlUploader(m.k, m.l, 'umum', pengaturanNilai(m.k),
+            m.k === 'struktur_organisasi' ? 'Gambar bagan atau PDF, maksimal 10 MB' : 'Gambar JPG atau PNG, maksimal 10 MB') +
+        '</div>';
+      }).join('') +
+    '</div>' +
+    '<div style="display:flex;justify-content:flex-end;gap:.6rem;margin-bottom:2rem">' +
+      '<button class="btn btn-primary" id="btnSimpanMedia">' + ICON.simpan.replace('18','16') + ' Simpan Identitas Visual</button></div>' +
+
+    '<h3 style="font-size:17px;margin:0 0 1rem">Keamanan Akun</h3>' +
     '<div class="grid" style="grid-template-columns:minmax(0,1fr) 340px;gap:1.25rem;align-items:start">' +
       '<div class="card card-pad"><form id="formAkun">' +
         '<div class="form-grid cols-2">' +
@@ -1196,7 +1353,7 @@ function gambarAkun() {
           '<button class="btn btn-primary" type="submit" id="btnSimpanAkun">' + ICON.simpan.replace('18','16') + ' Perbarui Akun</button></div>' +
       '</form></div>' +
       '<div class="card card-pad">' +
-        '<h3 style="font-size:16px">Keamanan Akun</h3>' +
+        '<h3 style="font-size:16px">Saran Keamanan</h3>' +
         '<ul style="padding-left:1.1rem;font-size:13.5px;color:var(--text-soft);line-height:1.9">' +
           '<li>Gunakan minimal 8 karakter dengan kombinasi huruf dan angka.</li>' +
           '<li>Jangan bagikan akun kepada pihak di luar staf kecamatan.</li>' +
@@ -1204,10 +1361,35 @@ function gambarAkun() {
           '<li>Segera ganti password bawaan <code>admin123</code> setelah instalasi.</li>' +
         '</ul>' +
         '<div class="banner banner-info" style="margin-top:1rem">' + ICON.info +
-          '<div><strong>Menambah akun admin baru</strong>Tambahkan baris pada sheet <code>Admin_Users</code>, lalu gunakan menu ini untuk mengganti password akun tersebut.</div></div>' +
+          '<div><strong>Menambah akun admin baru</strong>Tambahkan baris pada sheet <code>Admin_Users</code>, lalu gunakan menu ini untuk mengganti passwordnya.</div></div>' +
       '</div>' +
     '</div>';
 
+  /* ---- Identitas visual ---- */
+  const wadah = document.getElementById('mediaWadah');
+  pasangUploader(wadah);
+
+  document.getElementById('btnSimpanMedia').addEventListener('click', async function () {
+    const btn = this;
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try {
+      const objek = {};
+      media.forEach(function (m) {
+        const el = document.getElementById('f_' + m.k);
+        if (el) objek[m.k] = el.value;
+      });
+      const hasil = await simpanPengaturan(objek);
+      gambarSidebar();
+      UI.notif(hasil.demo ? 'Mode contoh: identitas visual tidak tersimpan permanen.' : 'Identitas visual berhasil disimpan.',
+               hasil.demo ? 'info' : 'success');
+    } catch (err) {
+      UI.notif('Gagal menyimpan: ' + err.message, 'error');
+    }
+    btn.disabled = false;
+    btn.innerHTML = ICON.simpan.replace('18','16') + ' Simpan Identitas Visual';
+  });
+
+  /* ---- Ganti password ---- */
   document.getElementById('formAkun').addEventListener('submit', async function (e) {
     e.preventDefault();
     const err = document.getElementById('akunError');
@@ -1232,8 +1414,13 @@ function gambarAkun() {
         jabatan: document.getElementById('aJabatan').value
       }, ADMIN.token);
       if (!hasil.success) throw new Error(hasil.message);
+      ADMIN.user.nama = document.getElementById('aNama').value;
+      ADMIN.user.jabatan = document.getElementById('aJabatan').value;
+      gambarTopbar();
       UI.notif('Akun berhasil diperbarui. Gunakan password baru pada login berikutnya.', 'success');
-      document.getElementById('formAkun').reset();
+      document.getElementById('aLama').value = '';
+      document.getElementById('aBaru').value = '';
+      document.getElementById('aUlang').value = '';
     } catch (ex) {
       err.textContent = ex.message;
       err.hidden = false;

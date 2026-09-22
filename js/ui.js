@@ -95,13 +95,19 @@ const UI = {
    * tampilkan blok gradasi berlabel, bukan gambar rusak.
    */
   gambar(url, judul, kelas) {
+    if (!url) return this.placeholder(judul);
     const k = kelas ? ' ' + kelas : '';
-    if (url) {
-      return '<img class="' + k.trim() + '" src="' + this.esc(url) + '" alt="' + this.esc(judul) + '" loading="lazy" ' +
-             'style="width:100%;height:100%;object-fit:cover" ' +
-             'onerror="this.outerHTML=UI.placeholder(' + JSON.stringify(JSON.stringify(judul || '')) + ')">';
-    }
-    return this.placeholder(judul);
+    // Judul disimpan di data-ph (sudah di-escape), lalu dibaca oleh
+    // UI.gantiPlaceholder bila berkas gagal dimuat — tanpa menyisipkan
+    // kode JavaScript berisi tanda kutip ke dalam atribut HTML.
+    return '<img class="' + k.trim() + '" src="' + this.esc(url) + '" alt="' + this.esc(judul) + '" loading="lazy" ' +
+           'data-ph="' + this.esc(judul) + '" style="width:100%;height:100%;object-fit:cover" ' +
+           'onerror="UI.gantiPlaceholder(this)">';
+  },
+
+  /** Dipanggil saat gambar gagal dimuat — diganti blok gradasi berlabel. */
+  gantiPlaceholder(img) {
+    try { img.outerHTML = UI.placeholder(img.getAttribute('data-ph') || ''); } catch (e) {}
   },
 
   placeholder(judul) {
