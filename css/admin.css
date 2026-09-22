@@ -1,0 +1,235 @@
+/* ==========================================================================
+   PANEL ADMINISTRASI KECAMATAN
+   Memakai token warna & tipografi dari css/style.css
+   ========================================================================== */
+
+body.admin { background: var(--canvas); }
+
+/* --------------------------------------------------
+   1. HALAMAN LOGIN
+   -------------------------------------------------- */
+.login-screen {
+  min-height: 100vh; display: grid; grid-template-columns: 1.1fr .9fr;
+  background: linear-gradient(135deg, var(--primary-deep), var(--primary) 55%, #2A1F6E);
+}
+.login-visual { padding: 3rem; color: #fff; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
+.login-visual::after {
+  content: ''; position: absolute; width: 520px; height: 520px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(122,68,172,.55), transparent 70%);
+  right: -180px; top: -120px;
+}
+.login-visual .inner { position: relative; z-index: 1; max-width: 480px; }
+.login-visual h1 { font-size: 38px; line-height: 1.18; margin-bottom: 1rem; }
+.login-visual h1 em { font-style: normal; color: var(--accent-bright); }
+.login-visual p { color: var(--on-dark-soft); font-size: 15px; }
+.login-points { list-style: none; padding: 0; margin: 1.75rem 0 0; display: grid; gap: .85rem; }
+.login-points li { display: flex; gap: .7rem; align-items: flex-start; font-size: 14px; color: var(--on-dark-soft); }
+.login-points svg { flex: none; color: var(--accent-bright); margin-top: .15rem; }
+
+.login-panel { background: var(--canvas); display: grid; place-items: center; padding: 2rem; }
+.login-box { width: 100%; max-width: 400px; }
+.login-box .brand-mark { width: 52px; height: 52px; margin-bottom: 1rem; }
+.login-box h2 { font-size: 24px; margin-bottom: .25rem; }
+.login-box .sub { color: var(--text-soft); font-size: 14px; margin-bottom: 1.75rem; }
+
+/* --------------------------------------------------
+   2. TATA LETAK PANEL
+   -------------------------------------------------- */
+.admin-layout { display: grid; grid-template-columns: 264px 1fr; min-height: 100vh; }
+
+.admin-side {
+  background: linear-gradient(180deg, var(--primary-deep), var(--primary));
+  color: var(--on-dark-soft); display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.side-brand { display: flex; align-items: center; gap: .7rem; padding: 1.25rem 1.25rem 1rem; }
+.side-brand .brand-mark { background: linear-gradient(135deg, var(--secondary), var(--accent)); }
+.side-brand strong { color: #fff; font-size: 15px; display: block; line-height: 1.2; }
+.side-brand > span > span { display: block; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--on-dark-soft); }
+
+.side-group { padding: .75rem 1rem .25rem; font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: rgba(255,255,255,.42); }
+.side-nav { display: flex; flex-direction: column; gap: .1rem; padding: 0 .65rem; }
+.side-nav button {
+  display: flex; align-items: center; gap: .7rem; width: 100%; text-align: left;
+  background: none; border: none; cursor: pointer; color: rgba(255,255,255,.78);
+  padding: .65rem .75rem; border-radius: var(--r); font-size: 13.5px; font-weight: 500;
+  transition: background .15s ease, color .15s ease;
+}
+.side-nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+.side-nav button.active { background: rgba(255,255,255,.14); color: #fff; font-weight: 600; }
+.side-nav button svg { flex: none; opacity: .9; }
+.side-nav .pill {
+  margin-left: auto; background: var(--accent-bright); color: #3B2500;
+  font-size: 10px; font-weight: 800; padding: .1rem .45rem; border-radius: var(--r-full);
+}
+.side-foot { margin-top: auto; padding: 1rem; font-size: 12px; }
+.side-status {
+  display: flex; align-items: center; gap: .5rem; background: rgba(255,255,255,.08);
+  border-radius: var(--r); padding: .6rem .75rem;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dot-on { background: #4ADE80; box-shadow: 0 0 0 3px rgba(74,222,128,.22); }
+.dot-off { background: #FBBF24; box-shadow: 0 0 0 3px rgba(251,191,36,.22); }
+
+.admin-main { min-width: 0; display: flex; flex-direction: column; }
+.admin-top {
+  background: #fff; border-bottom: 1px solid var(--border); padding: .85rem 1.5rem;
+  display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 30;
+}
+.admin-top .sp { flex: 1; }
+.admin-search {
+  display: flex; align-items: center; gap: .5rem; background: var(--subtle);
+  border: 1.5px solid transparent; border-radius: var(--r); padding: .45rem .8rem; min-width: 260px;
+}
+.admin-search:focus-within { border-color: var(--secondary); background: #fff; }
+.admin-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 13.5px; }
+.admin-user { display: flex; align-items: center; gap: .6rem; font-size: 13px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; font-weight: 700; font-size: 13px;
+}
+.admin-body { padding: 1.5rem; flex: 1; min-width: 0; }
+.admin-toggle { display: none; background: var(--primary); color: #fff; border: none; width: 38px; height: 38px; border-radius: var(--r); cursor: pointer; }
+
+/* --------------------------------------------------
+   3. KEPALA MODUL & KARTU RINGKAS
+   -------------------------------------------------- */
+.modul-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.modul-head h1 { font-size: 26px; margin-bottom: .2rem; }
+.modul-head p { color: var(--text-soft); font-size: 13.5px; margin: 0; max-width: 68ch; }
+.modul-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 1.1rem; box-shadow: var(--e1); position: relative; overflow: hidden;
+}
+.kpi .lbl { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+.kpi .val { font-size: 30px; font-weight: 800; line-height: 1.15; margin-top: .3rem; }
+.kpi .sub { font-size: 12px; color: var(--text-muted); margin-top: .25rem; }
+.kpi .ico { position: absolute; top: 1rem; right: 1rem; width: 34px; height: 34px; border-radius: var(--r); display: grid; place-items: center; }
+.kpi-primary .val { color: var(--primary); }  .kpi-primary .ico { background: var(--container); color: var(--primary); }
+.kpi-warning .val { color: var(--warning); }  .kpi-warning .ico { background: var(--warning-bg); color: var(--warning-text); }
+.kpi-info    .val { color: var(--info); }     .kpi-info    .ico { background: var(--info-bg); color: var(--info-text); }
+.kpi-success .val { color: var(--success); }  .kpi-success .ico { background: var(--success-bg); color: var(--success-text); }
+
+/* --------------------------------------------------
+   4. BILAH ALAT TABEL
+   -------------------------------------------------- */
+.toolbar {
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: .8rem 1rem; margin-bottom: 1rem; box-shadow: var(--e1);
+}
+.toolbar .grow { flex: 1; min-width: 200px; }
+.toolbar input, .toolbar select {
+  height: 40px; padding: .4rem .75rem; border: 1.5px solid var(--border-strong);
+  border-radius: var(--r); background: #fff; outline: none; font-size: 13.5px; width: 100%;
+}
+.toolbar input:focus, .toolbar select:focus { border-color: var(--secondary); }
+.toolbar .info { font-size: 12.5px; color: var(--text-muted); margin-left: auto; }
+
+table.admin-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 760px; }
+table.admin-table thead th {
+  background: var(--subtle); text-align: left; padding: .7rem .85rem; white-space: nowrap;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+table.admin-table tbody td { padding: .7rem .85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+table.admin-table tbody tr:hover { background: var(--container-low); }
+table.admin-table tbody tr.terpilih { background: var(--container); }
+table.admin-table td.aksi { white-space: nowrap; text-align: right; }
+.ikon-btn {
+  background: none; border: 1px solid var(--border); border-radius: var(--r-sm);
+  width: 30px; height: 30px; display: inline-grid; place-items: center; cursor: pointer;
+  color: var(--text-soft); margin-left: .25rem;
+}
+.ikon-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--subtle); }
+.ikon-btn.bahaya:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+.sel-mini { width: 46px; height: 34px; border-radius: var(--r-sm); overflow: hidden; background: var(--subtle); flex: none; }
+
+/* --------------------------------------------------
+   5. MODAL FORMULIR
+   -------------------------------------------------- */
+.modal-bg {
+  position: fixed; inset: 0; z-index: 150; background: rgba(15,23,42,.55);
+  backdrop-filter: blur(4px); display: none; padding: 1.5rem; overflow-y: auto;
+}
+.modal-bg.open { display: block; }
+.modal {
+  background: #fff; border-radius: var(--r-xl); box-shadow: var(--e3);
+  max-width: 760px; margin: 1.5rem auto; overflow: hidden;
+}
+.modal.lebar { max-width: 1040px; }
+.modal-head {
+  padding: 1.1rem 1.35rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; background: #fff; z-index: 2;
+}
+.modal-head h3 { font-size: 18px; margin: 0; flex: 1; }
+.modal-body { padding: 1.35rem; }
+.modal-foot {
+  padding: 1rem 1.35rem; border-top: 1px solid var(--border); background: var(--subtle);
+  display: flex; justify-content: flex-end; gap: .6rem; flex-wrap: wrap;
+}
+
+/* --------------------------------------------------
+   6. KELOLA PENGADUAN (dua panel)
+   -------------------------------------------------- */
+.aduan-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 1.25rem; align-items: start; }
+.aduan-detail { position: sticky; top: 84px; max-height: calc(100vh - 110px); overflow-y: auto; }
+.aduan-detail .kepala {
+  background: linear-gradient(140deg, var(--primary-deep), var(--primary)); color: #fff; padding: 1.1rem 1.25rem;
+}
+.aduan-detail .kepala .tiket { font-size: 20px; font-weight: 800; letter-spacing: .02em; }
+.aduan-detail .kepala .sub { font-size: 12px; color: var(--on-dark-soft); }
+.aduan-detail .isi { padding: 1.25rem; display: grid; gap: 1.1rem; min-width: 0; }
+.aduan-detail .isi > * { min-width: 0; }
+.aduan-detail .btn { white-space: normal; text-align: center; line-height: 1.4; }
+.aduan-detail h3, .aduan-detail .kutipan, .aduan-detail .timeline { overflow-wrap: anywhere; }
+.kutipan {
+  background: var(--subtle); border-left: 3px solid var(--secondary); border-radius: 0 var(--r) var(--r) 0;
+  padding: .85rem 1rem; font-size: 13.5px; color: var(--text-soft); font-style: italic;
+}
+.blok-label { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .45rem; }
+.lampiran-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; }
+.lampiran-grid a { aspect-ratio: 4/3; border-radius: var(--r); overflow: hidden; display: block; border: 1px solid var(--border); }
+.lampiran-grid img { width: 100%; height: 100%; object-fit: cover; }
+
+/* --------------------------------------------------
+   7. PENGATURAN
+   -------------------------------------------------- */
+.setting-row {
+  display: grid; grid-template-columns: 260px 1fr; gap: 1rem; align-items: start;
+  padding: 1rem 0; border-bottom: 1px solid var(--border);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-row .ket strong { display: block; font-size: 14px; }
+.setting-row .ket span { font-size: 12.5px; color: var(--text-muted); }
+
+/* --------------------------------------------------
+   8. RESPONSIF
+   -------------------------------------------------- */
+@media (max-width: 1100px) {
+  .aduan-layout { grid-template-columns: 1fr; }
+  .aduan-detail { position: static; max-height: none; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .login-screen { grid-template-columns: 1fr; }
+  .login-visual { display: none; }
+}
+@media (max-width: 860px) {
+  .admin-layout { grid-template-columns: 1fr; }
+  .admin-side {
+    position: fixed; inset: 0 auto 0 0; width: 268px; z-index: 120;
+    transform: translateX(-100%); transition: transform .25s ease;
+  }
+  .admin-side.open { transform: translateX(0); box-shadow: var(--e3); }
+  .admin-toggle { display: grid; place-items: center; }
+  .admin-body { padding: 1rem; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .admin-search { min-width: 0; }
+  .setting-row { grid-template-columns: 1fr; }
+  .modal-bg { padding: 0; }
+  .modal { border-radius: 0; margin: 0; min-height: 100vh; }
+}

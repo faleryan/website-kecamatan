@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal Resmi Kantor Kecamatan</title>
+<meta name="description" content="Portal resmi pemerintah kecamatan: profil wilayah, data desa, statistik penduduk, direktori UMKM, agenda kegiatan, pengumuman, berita, dokumen publik, serta layanan pengaduan warga secara daring.">
+<meta name="theme-color" content="#1E1A5A">
+
+<!-- Berbagi tautan (Open Graph) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Portal Resmi Kantor Kecamatan">
+<meta property="og:description" content="Informasi publik, data wilayah, dan layanan pengaduan warga dalam satu portal resmi kecamatan.">
+
+<!-- Ikon sederhana berbasis SVG sebaris (tanpa berkas tambahan) -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231E1A5A'/><path d='M22 74h56M30 74V38l20-14 20 14v36' stroke='%23E69A19' stroke-width='7' fill='none' stroke-linejoin='round'/></svg>">
+
+<!-- Tipografi -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#konten">Lompat ke konten utama</a>
+
+<!-- Bilah informasi atas -->
+<div class="topbar" id="topbar"></div>
+
+<!-- Header & navigasi -->
+<header class="site-header" id="header"></header>
+
+<!-- Teks berjalan pengumuman resmi -->
+<div class="ticker" id="ticker"></div>
+
+<!-- Pemberitahuan mode contoh (muncul hanya bila backend belum terhubung) -->
+<div id="bilahMode"></div>
+
+<!-- Konten halaman (diisi oleh perutean) -->
+<main id="konten"></main>
+
+<!-- Footer -->
+<footer class="site-footer" id="footer"></footer>
+
+<!-- Indikator memuat & notifikasi -->
+<div class="loading-overlay" id="loading" aria-hidden="true"><div class="spinner" role="status" aria-label="Memuat"></div></div>
+<div class="notif" id="notif" role="status" aria-live="polite"></div>
+
+<!-- Skrip: urutan pemuatan wajib seperti ini -->
+<script src="js/config.js"></script>
+<script src="js/demo-data.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/api.js"></script>
+<script src="js/pages.js"></script>
+<script src="js/pengaduan.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
